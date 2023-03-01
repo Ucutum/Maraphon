@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ru">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>My Website</title>
+        <link href="{{ url_for('static', filename='./bootstrap-5.2.2-dist/css/bootstrap.min.css') }}" rel="stylesheet">
+    </head>
+    <body>
+        
+        <header class="p-3 bg-dark text-white">
+            <div class="container">
+              <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-lg-start">
+                <a href="/" class="d-flex align-items-center mb-2 mb-lg-0 text-white text-decoration-none">
+                  <svg class="bi me-2" width="40" height="32" role="img" aria-label="Bootstrap"><use xlink:href="#bootstrap"></use></svg>
+                </a>
+        
+                <ul class="nav col-12 col-lg-auto me-lg-auto mb-2 justify-content-center mb-md-0">
+                  {% for item in header["menu"] %}
+                  {% if item[2] %}
+                  <li><a href="{{ item[1] }}" class="nav-link px-2 text-secondary">{{ item[0] }}</a></li>
+                  {% else %}
+                  <li><a href="{{ item[1] }}" class="nav-link px-2 text-white">{{ item[0] }}</a></li>
+                  {% endif %}
+                  {% endfor %}
+                </ul>
+        
+                <form class="col-12 col-lg-auto mb-3 mb-lg-0 me-lg-3" action="{{ url_for('search') }}" method="post">
+                  <input type="search" name="search" class="form-control form-control-dark" placeholder="Search..." aria-label="Search">
+                </form>
+                
+                {% if not header["registered"] %}
+                <div class="text-end">
+                  <a type="button" href="/login" class="btn btn-outline-light me-2">Войти</a>
+                  <a type="button" href="/singin" class="btn btn-warning">Зарегистрироваться</a>
+                </div>
+                {% else %}
+                  {% if header["account"] %}
+                    <a href="/account" class="nav-link px-2 text-secondary">Account</a>
+                  {% else %}
+                    <a href="/account" class="nav-link px-2 text-white">Account</a>
+                  {% endif %}
+                {% endif %}
+              </div>
+            </div>
+          </header>
+
+        <div class="mt-3 mb-3 mx-4">
+          {% block content %}
+          <h1>content</h1>
+          {% endblock %}
+        </div>
+
+        <script src="{{ url_for('static', filename='./bootstrap-5.2.2-dist/js/bootstrap.bundle.min.js') }}" ></script>
+    </body>
+</html>

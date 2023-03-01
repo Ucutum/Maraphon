@@ -1,0 +1,5 @@
+{
+    "DATABASE": "/tmp/database.db",
+    "DEBUG": true,
+    "SECRET_KEY": "kjldasfKFJDSLKlskdfjsld"
+}
