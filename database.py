@@ -33,11 +33,11 @@ WHERE name = ?''', (name, )).fetchone():
     def get_user_id(self, name):
         try:
             res = self.cur.execute('''SELECT id FROM users
-WHERE name = ?''', (name, )).fetchone()[0]
+WHERE name = ?''', (name, )).fetchone()
             if not res:
                 error("User not found")
                 return None
-            return res
+            return res[0]
         except sqlite3.Error as e:
             error(e)
         return None
@@ -45,11 +45,11 @@ WHERE name = ?''', (name, )).fetchone()[0]
     def get_user_name(self, id):
         try:
             res = self.cur.execute('''SELECT name FROM users
-WHERE id = ?''', (id, )).fetchone()[0]
+WHERE id = ?''', (id, )).fetchone()
             if not res:
                 error("User not found")
                 return None
-            return res
+            return res[0]
         except sqlite3.Error as e:
             error(e)
         return None
@@ -57,11 +57,65 @@ WHERE id = ?''', (id, )).fetchone()[0]
     def get_user_password(self, id):
         try:
             res = self.cur.execute('''SELECT password FROM users
-WHERE id = ?''', (id, )).fetchone()[0]
+WHERE id = ?''', (id, )).fetchone()
             if not res:
-                print("User not found")
+                error("User not found")
                 return None
-            return res
+            return res[0]
+        except sqlite3.Error as e:
+            error(e)
+        return None
+
+    def get_maraphon(self, id):
+        try:
+            res = self.cur.execute('''SELECT * FROM maraphons
+WHERE id = ?''', (id, )).fetchone()
+            if not res:
+                error("Maraphon not found")
+                return None
+            maraphon = {
+                "id": res[0],
+                "creator": res[1],
+                "title": res[2]
+            }
+            return maraphon
+        except sqlite3.Error as e:
+            error(e)
+        return None
+
+    def get_tasks(self, id):
+        try:
+            res = self.cur.execute('''SELECT * FROM tasks
+WHERE main = ?
+ORDER BY [index]''', (id, )).fetchall()
+            if not res:
+                error("Tasks not found")
+                res = []
+            tasks = []
+            for e in res:
+                tasks.append(
+                    {
+                        "id": e[0],
+                        "main": e[1],
+                        "index": e[2],
+                        "name": e[3],
+                        "date": e[4],
+                        "description": e[5]
+                    }
+                )
+            return tasks
+        except sqlite3.Error as e:
+            error(e)
+        return None
+
+    def get_state(self, task, user):
+        try:
+            res = self.cur.execute('''SELECT done FROM states
+WHERE task = ? AND user = ?''', (task, user)).fetchone()
+            if not res:
+                error("State not found")
+                return False
+            return bool(res[0])
         except sqlite3.Error as e:
             error(e)
         return None

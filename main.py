@@ -6,6 +6,7 @@ from database import Database
 import json
 from flask_login import LoginManager, login_user, login_required, current_user, logout_user
 from user import User
+from datetime import datetime
 
 app = Flask(__name__)
 with open("config.json") as file:
@@ -82,10 +83,20 @@ def close_db(error):
         g.link_db.close()
 
 
+def strtooday():
+    date = datetime.today()
+    day = date.day
+    month = date.month
+    year = date.year
+    strdate = f"{str(year).rjust(4, '0')}.{str(month).rjust(2, '0')}" +\
+        f".{str(day).rjust(2, '0')}"
+    return strdate
+
+
 @app.route("/search", methods=["GET", "POST"])
 def search():
     print("SEARCH|", request.form.get("search"))
-    return abort(404)
+    return redirect(url_for("maraphon", id=request.form.get("search", "0")))
 
 
 @app.route("/")
@@ -113,7 +124,6 @@ def account():
     make_header_data(url_for("account"))
     data = [("name", current_user.name), ("id", current_user.id)]
     return render_template("account.html", header=header, data=data)
-
 
 
 @app.route("/logout")
@@ -154,12 +164,35 @@ def login():
 
 
 @app.route("/maraphon/<id>", methods=["GET", "POST"])
-def maraphone(id):
+@login_required
+def maraphon(id):
+    maraphon = db.get_maraphon(id)
+    if not maraphon:
+        return abort(404)
+    print(maraphon)
+
+    tasks = db.get_tasks(id)
+    days = []
+    for task in tasks:
+        days.append(
+            (str(task["id"]), db.get_state(task["id"], current_user.id), strtooday() == task["date"]))
+    print(days)
+
     if request.method == "POST":
         print(request.form.getlist("check"))
+        for e in request.form.getlist("check"):
+            ok_days = filter(lambda d: d[0] == e and d[2], days)
+            for oe in ok_days:
+                # update oe
+                pass
 
-    days = [("day 1", True, False), ("super day", True, True)]
-    return render_template("maraphon.html", header=header, id=id, days=days)
+    parameters = {
+        "id": id,
+        "days": days,
+        "title": maraphon["title"],
+        "creator": maraphon["creator"]
+    }
+    return render_template("maraphon.html", header=header, **parameters)
 
 
 if __name__ == "__main__":
