@@ -1,0 +1,84 @@
+INFO:root:Started main.py
+INFO:root:Create app
+INFO:root:config.json{'DATABASE': '/tmp/database.db', 'DEBUG': True, 'SECRET_KEY': 'kjldasfKFJDSLKlskdfjsld'}
+INFO:root:Connect database width adress sqlite:////home/timofey/VSCodeProjects/WEB/Maraphon/db/database.db?check_same_thread=False
+WARNING:werkzeug: * Debugger is active!
+INFO:werkzeug: * Debugger PIN: 830-902-563
+DEBUG:root:No user
+INFO:werkzeug:127.0.0.1 - - [03/Mar/2023 16:22:12] "GET / HTTP/1.1" 200 -
+DEBUG:root:No user
+INFO:werkzeug:127.0.0.1 - - [03/Mar/2023 16:22:12] "[36mGET /static/bootstrap-5.2.2-dist/css/bootstrap.min.css HTTP/1.1[0m" 304 -
+DEBUG:root:No user
+INFO:werkzeug:127.0.0.1 - - [03/Mar/2023 16:22:12] "[36mGET /static/bootstrap-5.2.2-dist/js/bootstrap.bundle.min.js HTTP/1.1[0m" 304 -
+DEBUG:root:No user
+INFO:werkzeug:127.0.0.1 - - [03/Mar/2023 16:22:17] "GET /singin HTTP/1.1" 200 -
+DEBUG:root:No user
+INFO:werkzeug:127.0.0.1 - - [03/Mar/2023 16:22:17] "[36mGET /static/bootstrap-5.2.2-dist/css/bootstrap.min.css HTTP/1.1[0m" 304 -
+DEBUG:root:No user
+INFO:werkzeug:127.0.0.1 - - [03/Mar/2023 16:22:17] "[33mGET /static/images/logo.png HTTP/1.1[0m" 404 -
+DEBUG:root:No user
+INFO:werkzeug:127.0.0.1 - - [03/Mar/2023 16:22:17] "[36mGET /static/bootstrap-5.2.2-dist/js/bootstrap.bundle.min.js HTTP/1.1[0m" 304 -
+DEBUG:root:No user
+INFO:werkzeug:127.0.0.1 - - [03/Mar/2023 16:22:20] "GET /login HTTP/1.1" 200 -
+DEBUG:root:No user
+INFO:werkzeug:127.0.0.1 - - [03/Mar/2023 16:22:20] "[36mGET /static/bootstrap-5.2.2-dist/css/bootstrap.min.css HTTP/1.1[0m" 304 -
+DEBUG:root:No user
+INFO:werkzeug:127.0.0.1 - - [03/Mar/2023 16:22:20] "[33mGET /static/images/logo.png HTTP/1.1[0m" 404 -
+DEBUG:root:No user
+INFO:werkzeug:127.0.0.1 - - [03/Mar/2023 16:22:20] "[36mGET /static/bootstrap-5.2.2-dist/js/bootstrap.bundle.min.js HTTP/1.1[0m" 304 -
+DEBUG:root:No user
+INFO:werkzeug:127.0.0.1 - - [03/Mar/2023 16:22:40] "[32mPOST /login HTTP/1.1[0m" 302 -
+DEBUG:root:No user
+INFO:werkzeug:127.0.0.1 - - [03/Mar/2023 16:22:41] "GET /login HTTP/1.1" 200 -
+DEBUG:root:No user
+INFO:werkzeug:127.0.0.1 - - [03/Mar/2023 16:22:41] "[33mGET /static/images/logo.png HTTP/1.1[0m" 404 -
+DEBUG:root:No user
+INFO:werkzeug:127.0.0.1 - - [03/Mar/2023 16:22:41] "[36mGET /static/bootstrap-5.2.2-dist/css/bootstrap.min.css HTTP/1.1[0m" 304 -
+DEBUG:root:No user
+INFO:werkzeug:127.0.0.1 - - [03/Mar/2023 16:22:41] "[36mGET /static/bootstrap-5.2.2-dist/js/bootstrap.bundle.min.js HTTP/1.1[0m" 304 -
+DEBUG:root:No user
+INFO:werkzeug:127.0.0.1 - - [03/Mar/2023 16:23:06] "[32mPOST /login HTTP/1.1[0m" 302 -
+DEBUG:root:No user
+INFO:werkzeug:127.0.0.1 - - [03/Mar/2023 16:23:06] "GET /login HTTP/1.1" 200 -
+DEBUG:root:No user
+INFO:werkzeug:127.0.0.1 - - [03/Mar/2023 16:23:07] "[33mGET /static/images/logo.png HTTP/1.1[0m" 404 -
+DEBUG:root:No user
+INFO:werkzeug:127.0.0.1 - - [03/Mar/2023 16:23:07] "[36mGET /static/bootstrap-5.2.2-dist/css/bootstrap.min.css HTTP/1.1[0m" 304 -
+DEBUG:root:No user
+INFO:werkzeug:127.0.0.1 - - [03/Mar/2023 16:23:07] "[36mGET /static/bootstrap-5.2.2-dist/js/bootstrap.bundle.min.js HTTP/1.1[0m" 304 -
+DEBUG:root:No user
+INFO:werkzeug:127.0.0.1 - - [03/Mar/2023 16:23:21] "[32mPOST /login HTTP/1.1[0m" 302 -
+DEBUG:root:No user
+INFO:werkzeug:127.0.0.1 - - [03/Mar/2023 16:23:21] "GET /login HTTP/1.1" 200 -
+DEBUG:root:No user
+INFO:werkzeug:127.0.0.1 - - [03/Mar/2023 16:23:21] "[36mGET /static/bootstrap-5.2.2-dist/css/bootstrap.min.css HTTP/1.1[0m" 304 -
+DEBUG:root:No user
+INFO:werkzeug:127.0.0.1 - - [03/Mar/2023 16:23:21] "[33mGET /static/images/logo.png HTTP/1.1[0m" 404 -
+DEBUG:root:No user
+INFO:werkzeug:127.0.0.1 - - [03/Mar/2023 16:23:21] "[36mGET /static/bootstrap-5.2.2-dist/js/bootstrap.bundle.min.js HTTP/1.1[0m" 304 -
+DEBUG:root:No user
+INFO:werkzeug:127.0.0.1 - - [03/Mar/2023 16:23:41] "[32mPOST /login HTTP/1.1[0m" 302 -
+DEBUG:root:No user
+INFO:werkzeug:127.0.0.1 - - [03/Mar/2023 16:23:41] "GET /login HTTP/1.1" 200 -
+DEBUG:root:No user
+INFO:werkzeug:127.0.0.1 - - [03/Mar/2023 16:23:41] "[36mGET /static/bootstrap-5.2.2-dist/css/bootstrap.min.css HTTP/1.1[0m" 304 -
+DEBUG:root:No user
+INFO:werkzeug:127.0.0.1 - - [03/Mar/2023 16:23:41] "[33mGET /static/images/logo.png HTTP/1.1[0m" 404 -
+DEBUG:root:No user
+INFO:werkzeug:127.0.0.1 - - [03/Mar/2023 16:23:41] "[36mGET /static/bootstrap-5.2.2-dist/js/bootstrap.bundle.min.js HTTP/1.1[0m" 304 -
+DEBUG:root:No user
+INFO:werkzeug:127.0.0.1 - - [03/Mar/2023 16:23:57] "GET /singin HTTP/1.1" 200 -
+DEBUG:root:No user
+INFO:werkzeug:127.0.0.1 - - [03/Mar/2023 16:23:58] "[36mGET /static/bootstrap-5.2.2-dist/css/bootstrap.min.css HTTP/1.1[0m" 304 -
+DEBUG:root:No user
+INFO:werkzeug:127.0.0.1 - - [03/Mar/2023 16:23:58] "[33mGET /static/images/logo.png HTTP/1.1[0m" 404 -
+DEBUG:root:No user
+INFO:werkzeug:127.0.0.1 - - [03/Mar/2023 16:23:58] "[36mGET /static/bootstrap-5.2.2-dist/js/bootstrap.bundle.min.js HTTP/1.1[0m" 304 -
+DEBUG:root:No user
+INFO:werkzeug:127.0.0.1 - - [03/Mar/2023 16:24:09] "POST /singin HTTP/1.1" 200 -
+DEBUG:root:No user
+INFO:werkzeug:127.0.0.1 - - [03/Mar/2023 16:24:09] "[36mGET /static/bootstrap-5.2.2-dist/css/bootstrap.min.css HTTP/1.1[0m" 304 -
+DEBUG:root:No user
+INFO:werkzeug:127.0.0.1 - - [03/Mar/2023 16:24:09] "[33mGET /static/images/logo.png HTTP/1.1[0m" 404 -
+DEBUG:root:No user
+INFO:werkzeug:127.0.0.1 - - [03/Mar/2023 16:24:09] "[36mGET /static/bootstrap-5.2.2-dist/js/bootstrap.bundle.min.js HTTP/1.1[0m" 304 -

@@ -1,17 +1,18 @@
-class User:
-    def from_db_by_name(self, user_name, db):
-        self.id = db.get_user_id(user_name)
-        self.name = user_name
+from sqlalchemy.orm import Session
+from data.users import User
+
+
+class UserLogin:
+    def from_db_by_name(self, user_name, db: Session):
+        self.user = db.query(User).filter(User.name == user_name).first()
         return self
 
-    def from_db_by_id(self, user_id, db):
-        self.name = db.get_user_name(user_id)
-        self.id = user_id
+    def from_db_by_id(self, user_id, db: Session):
+        self.user = db.query(User).filter(User.id == user_id).first()
         return self
 
-    def create(self, id, name):
-        self.id = id
-        self.name = name
+    def create(self, user):
+        self.user = user
         return self
 
     def is_authenticated(self):
@@ -24,4 +25,4 @@ class User:
         return False
 
     def get_id(self):
-        return str(self.id)
+        return str(self.user.id)
