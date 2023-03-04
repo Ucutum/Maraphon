@@ -20,6 +20,6 @@ class Task(SqlAlchemyBase):
     created_date = sqlalchemy.Column(sqlalchemy.Date,
                                      default=datetime.datetime.now)
 
-    deskription = sqlalchemy.Column(sqlalchemy.String)
+    description = sqlalchemy.Column(sqlalchemy.String)
 
     states = orm.relationship("State")

@@ -1,19 +1,38 @@
 {% extends "index.html" %}
 {% block content %}
 
+{% for message in get_flashed_messages() %}
+<div class="alert alert-warning" role="alert">
+    {{ message }}
+</div>
+{% endfor %}
+
 <main class="form-signin">
     <div class="text-center" style="width: 300px; margin:0 auto;">
         <form method="post">
+        {{ form.hidden_tag() }}
+
         <img class="mb-4" src="{{ url_for('static', filename='images/logo.png') }}" alt="" width="72" height="57">
         <h1 class="h3 mb-3 fw-normal">Пожалуйста, войдите</h1>
-    
+        
         <div class="form-floating mb-1">
-            <input name="name" type="line" class="form-control" id="floatingInput" placeholder="UserName">
-            <label for="floatingInput">Имя</label>
+            {{ form.name(class="form-control", id="floatingInput") }}
+            <label for="floatingInput">{{ form.name.label }}</label>
+            {% for error in form.name.errors %}
+            <p class="alert alert-danger" role="alert">
+                {{ error }}
+            </p>
+            {% endfor %}
         </div>
+
         <div class="form-floating mb-2">
-            <input name="password" type="password" class="form-control" id="floatingPassword" placeholder="Password">
-            <label for="floatingPassword">Пароль</label>
+            {{ form.password(class="form-control", type="password", id="floatingPassword") }}
+            <label for="floatingPassword">{{ form.password.label }}</label>
+            {% for error in form.password.errors %}
+            <p class="alert alert-danger" role="alert">
+                {{ error }}
+            </p>
+            {% endfor %}
         </div>
     
         <!-- <div class="checkbox mb-3">
@@ -22,8 +41,7 @@
             </label>
         </div> -->
 
-        <button class="w-100 btn btn-lg btn-primary" type="submit">Войти</button>
-        <!-- <p class="mt-5 mb-3 text-muted">© 2017–2021</p> -->
+        {{ form.submit(type="submit", class="w-100 btn btn-lg btn-primary mb-2") }}
         </form>
     </div>
 </main>

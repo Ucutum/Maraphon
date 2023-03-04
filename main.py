@@ -2,19 +2,22 @@ import logging
 from logging import debug
 from logging import info
 from logging import warning
-from logging import error
 
 # logging.basicConfig(level=logging.INFO, filename="applog.log", filemode="w")
 logging.getLogger().setLevel(logging.DEBUG)
 info("Started main.py")
 
-from flask import Flask, render_template, request, g, abort, redirect, url_for
+from flask import Flask, render_template, request, abort, redirect, url_for, flash
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
 import json
 from flask_login import LoginManager, login_user, login_required, current_user, logout_user
-from user import UserLogin
+from userlogin import UserLogin
 from sqlalchemy.orm import Session
+import datetime
+
+from form.login import LoginForm
+from form.singin import SinginForm
 
 
 info("Create app")
@@ -47,9 +50,9 @@ header = {}
 def make_header_data(url=None):
     header["registered"] = current_user.is_authenticated
     header["menu"] = [
-        ("Главная", "home", False),
-        ("FAQ", "faq", False),
-        ("О Нас", "about", False)
+        ("Главная", url_for("home"), False),
+        ("FAQ", url_for("faq"), False),
+        ("О Нас", url_for("about"), False)
         ]
     if url == url_for("account"):
         header["account"] = True
@@ -58,7 +61,7 @@ def make_header_data(url=None):
 
     if url is not None:
         for i in range(len(header["menu"])):
-            if url_for(header["menu"][i][1]) == url:
+            if header["menu"][i][1] == url:
                 header["menu"][i] = (
                     header["menu"][i][0], header["menu"][i][1], True)
             else:
@@ -126,72 +129,130 @@ def logout():
 
 @app.route("/singin", methods=["GET", "POST"])
 def singin():
-    if request.method == "POST":
-        name = request.form.get("name")
-        telegramm = request.form.get("telegramm")
-        password = request.form.get("password")
-        repassword = request.form.get("repassword")
-        if password != repassword:
-            return abort(400)
-        debug(name, telegramm, password, repassword)
+    form = SinginForm()
+    if form.validate_on_submit():
+        telegram = form.telegram.data
+        name = form.name.data
+        password = form.password.data
+        password_again = form.password_again.data
+
+        if len(telegram) <= 1:
+            flash("Telegram must be specified.")
+            return render_template("singin.html", header=header, form=form)
+        if telegram[0] != "@":
+            flash("Telegram should be similar to '@telegram'.")
+            return render_template("singin.html", header=header, form=form)
+
+        if db.query(User).filter(User.telegram == telegram).all():
+            flash("This telegram is already taken.")
+            return render_template("singin.html", header=header, form=form)
+
+        if not name.strip():
+            flash("Name must be specified.")
+            return render_template("singin.html", header=header, form=form)
+
+        if len(name) <= 5:
+            flash("The name should be longer 5 characters. (>= 6)")
+            return render_template("singin.html", header=header, form=form)
+
+        if db.query(User).filter(User.name == name).all():
+            flash("This name is already taken.")
+            return render_template("singin.html", header=header, form=form)
+
+        if password != password_again:
+            flash("The password was repeated incorrectly.")
+            return render_template("singin.html", header=header, form=form)
+
+        debug(f"singin {telegram} {name}")
         new_user = User(
             name=name,
-            telegramm=telegramm
+            telegram=telegram
             )
         new_user.set_password(password)
         db.add(new_user)
         db.commit()
-        redirect(url_for("login"))
-    return render_template("singin.html", header=header)
+        return redirect(url_for("login"))
+    return render_template("singin.html", header=header, form=form)
 
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    if request.method == "POST":
-        name = request.form.get("name")
+    form = LoginForm()
+    if form.validate_on_submit():
+        name = form.name.data
         logging_user = db.query(User).filter(User.name == name).first()
         if logging_user is None:
             debug("name is unreal")
-            return redirect(url_for('login'))
-        password = request.form.get("password")
+            flash("There is no such name or password.")
+            return render_template("login.html", header=header, form=form)
+        password = form.password.data
         if logging_user.check_password(password):
-            debug("login")
+            debug(f"login {name}")
             usersess = UserLogin().create(logging_user)
             login_user(usersess)
             return redirect(url_for('home'))
-    return render_template("login.html", header=header)
+        else:
+            debug("password is wrong")
+            flash("There is no such name or password.")
+            return render_template("login.html", header=header, form=form)
+    return render_template("login.html", header=header, form=form)
 
 
 @app.route("/maraphon/<id>", methods=["GET", "POST"])
 @login_required
 def maraphon(id):
-    maraphon = db.get_maraphon(id)
-    if not maraphon:
-        return abort(404)
+    maraphon = db.query(Maraphone).filter(Maraphone.id == id).first()
     print(maraphon)
 
-    # tasks = db.get_tasks(id)
-    # days = []
-    # for task in tasks:
-    #     days.append(
-    #         (str(task["id"]), db.get_state(task["id"], current_user.id), strtooday() == task["date"]))
-    # print(days)
+    if not maraphon:
+        return abort(404)
 
-    # if request.method == "POST":
-    #     print(request.form.getlist("check"))
-    #     for e in request.form.getlist("check"):
-    #         ok_days = filter(lambda d: d[0] == e and d[2], days)
-    #         for oe in ok_days:
-    #             # update oe
-    #             pass
+    tasks = db.query(Task).filter(Task.main_id == id).all()
+    days = []
+    for task in tasks:
+        current_state = db.query(State).filter(State.task_id == task.id, State.user_id == current_user.get_id()).first()
+        if current_state is None:
+            current_state = State(task_id=task.id, user_id=current_user.get_id(), done=False)
+            db.add(current_state)
+            db.commit()
+        days.append((
+            task.id,
+            task.name,
+            current_state.done,
+            datetime.datetime.today().date() == task.date,
+            task.description))
+    print(days)
 
-    # parameters = {
-    #     "id": id,
-    #     "days": days,
-    #     "title": maraphon["title"],
-    #     "creator": maraphon["creator"]
-    # }
-    parameters = {}
+    # day
+    # (id, name, done, can_change)
+
+    if request.method == "POST":
+        checked = request.form.getlist("check")
+        for element_id in list(map(lambda x: x[0], days)):
+            ok_days = list(filter(lambda d: d[0] == element_id and d[3], days))
+            # days with id == element_id
+            print(ok_days)
+            if len(ok_days) == 0:
+                continue
+            if len(ok_days) > 1:
+                warning("len(days) > 1")
+            ok_day = ok_days[0]
+            current_state = db.query(State).filter(State.task_id == ok_day[0], State.user_id == current_user.get_id()).first()
+            # current State
+            if not current_state:
+                warning("not current state")
+                abort(400)
+            current_state.done = str(element_id) in request.form.getlist("check")
+            print(current_state.done)
+            db.commit()
+        return redirect(url_for("maraphon", id=id))
+
+    parameters = {
+        "id": id,
+        "title": maraphon.title,
+        "creator": maraphon.creator.name,
+        "days": days
+    }
 
     return render_template("maraphon.html", header=header, **parameters)
 

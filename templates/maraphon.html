@@ -1,57 +1,74 @@
 {% extends "index.html" %}
 {% block content %}
-<h1>Maraphone</h1>
-<h6>Id = {{ id }}</h6>
 
-<div class="wrap">
-    <form method="POST" name="days">
-    <div>
-        {% for day, status, can_touch in days %}
-            <div class="col-md-6">
-                <h3 class="mb-4 darkening" style="display: inline-block; border-radius: 5px;">{{ day }} |</h3>
-                <div style="display: inline-block;">
-                    {% if can_touch %}
-                    <div>
-                        {% if status %}
-                        <div class="form-check">
-                            <input name="check" class="form-check-input" type="checkbox" value="{{ day }}" id="flexCheckChecked" checked>
-                            <label class="form-check-label" for="flexCheckChecked">
-                            </label>
-                          </div>
+<main style="display: flex">
+    <div class="wrap" style="flex: auto;">
+        <h1>Maraphone</h1>
+        <h6>Id: {{ id }}</h6>
+        <h6>Creator: {{ creator }}</h6>
+
+        <form method="POST" name="days">
+        <div>
+            {% for day, name, status, can_touch, description in days %}
+                <div class="col-md-6">
+                    <h3 class="mb-4 darkening" id="{{ day }}" style="display: inline-block; border-radius: 5px;">{{ name }} |</h3>
+                    <p id="description_id_{{ day }}" hidden>{{ description }}</p>
+                    <p id="day_can_touch_{{ day }}" hidden>{{ can_touch }}</p>
+                    <div style="display: inline-block;">
+                        {% if can_touch %}
+                        <div>
+                            {% if status %}
+                            <div class="form-check">
+                                <input name="check" class="form-check-input" type="checkbox" value="{{ day }}" id="flexCheck_{{ day }}" checked>
+                                <label class="form-check-label" for="flexCheck_{{ day }}">
+                                </label>
+                            </div>
+                            {% else %}
+                            <div class="form-check">
+                                <input name="check" class="form-check-input" type="checkbox" value="{{ day }}" id="flexCheck_{{ day }}">
+                                <label class="form-check-label" for="flexCheck_{{ day }}">
+                                </label>
+                            </div>
+                            {% endif %}
+                        </div>
                         {% else %}
-                        <div class="form-check">
-                            <input name="check" class="form-check-input" type="checkbox" value="{{ day }}" id="flexCheckDefault">
-                            <label class="form-check-label" for="flexCheckDefault">
-                            </label>
+                        <div>
+                            {% if status %}
+                            <div class="form-check">
+                                <input name="check" class="form-check-input" type="checkbox" value="{{ day }}" id="flexCheck_{{ day }}" checked disabled>
+                                <label class="form-check-label" for="flexCheck_{{ day }}">
+                                </label>
+                            </div>     
+                            {% else %}
+                            <div class="form-check">
+                                <input name="check" class="form-check-input" type="checkbox" value="{{ day }}" id="flexCheck_{{ day }}" disabled>
+                                <label class="form-check-label" for="flexCheck_{{ day }}">
+                                </label>
+                            </div>
+                            {% endif %}
                         </div>
                         {% endif %}
                     </div>
-                    {% else %}
-                    <div>
-                        {% if status %}
-                        <div class="form-check">
-                            <input name="check" class="form-check-input" type="checkbox" value="{{ day }}" id="flexCheckCheckedDisabled" checked disabled>
-                            <label class="form-check-label" for="flexCheckCheckedDisabled">
-                            </label>
-                        </div>     
-                        {% else %}
-                        <div class="form-check">
-                            <input name="check" class="form-check-input" type="checkbox" value="{{ day }}" id="flexCheckDisabled" disabled>
-                            <label class="form-check-label" for="flexCheckDisabled">
-                            </label>
-                        </div>
-                        {% endif %}
-                    </div>
-                    {% endif %}
                 </div>
-            </div>
-        {% endfor %}
+            {% endfor %}
+        </div>
+
+        <div class="conrainer px-4 py-2">
+            <button type="submit" class="btn btn-warning btn-lg" style="border-radius: 12px;">Submit</button>
+        </div>
+        </form>
     </div>
 
-    <div class="conrainer px-4 py-2">
-        <button type="submit" class="btn btn-primary" style="border-radius: 12px;">Submit</button>
+    <div style="flex: auto;">
+        <div style="border: 2px solid black; border-radius: 10px; padding: 10px">
+            <h3 id="description_h">Description</h3>
+            <p id="description"></p>
+            <button class="btn btn-primary" id="description_commit_button"
+            hidden onclick="">Commit</button>
+        </div>
     </div>
-    </form>
-</div>
+</main>
+
+<script src="{{ url_for('static', filename='js/darkening.js') }}"></script>
 
 {% endblock %}

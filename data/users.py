@@ -12,7 +12,7 @@ class User(SqlAlchemyBase):
         sqlalchemy.Integer,
         primary_key=True, autoincrement=True)
     name = sqlalchemy.Column(sqlalchemy.String, nullable=True)
-    telegramm = sqlalchemy.Column(
+    telegram = sqlalchemy.Column(
         sqlalchemy.String,
         unique=True,
         nullable=True)
