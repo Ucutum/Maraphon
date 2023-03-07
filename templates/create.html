@@ -1,0 +1,16 @@
+{% extends "index.html" %}
+{% block content %}
+
+<h1>Create</h1>
+
+{% for m in maraphones %}
+<div>
+    <a href="{{ m[1] }}">{{ m[0] }}</a>
+</div>
+{% endfor %}
+
+<form method="post">
+    <button class="btn btn-primary mt-3" type="submit">Create new maraphone</button>
+</form>
+
+{% endblock %}

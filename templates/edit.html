@@ -1,0 +1,50 @@
+{% extends "index.html" %}
+{% block content %}
+<h1>Edit</h1>
+<div>
+    <form method="post">
+    {{ form.hidden_tag() }}
+    <div class="form-floating mb-1">
+        {{ form.name(class="form-control", id="floatingInput") }}
+        <label for="floatingInput">{{ form.name.label }}</label>
+        {% for error in form.name.errors %}
+        <p class="alert alert-danger" role="alert">
+            {{ error }}
+        </p>
+        {% endfor %}
+    </div>
+
+    <div class="form-floating mb-1">
+        {{ form.date(class="form-control", type="date", id="floatingInput") }}
+        <label for="floatingInput">{{ form.date.label }}</label>
+        {% for error in form.date.errors %}
+        <p class="alert alert-danger" role="alert">
+            {{ error }}
+        </p>
+        {% endfor %}
+    </div>
+
+    <div class="form-floating mb-1">
+        {{ form.description(class="form-control", type="textarea", id="floatingInput") }}
+        <label for="floatingInput" class="form-label">{{ form.description.label }}</label>
+        {% for error in form.description.errors %}
+        <p class="alert alert-danger" role="alert">
+            {{ error }}
+        </p>
+        {% endfor %}
+    </div>
+
+    {{ form.submit(type="submit", class="w-100 btn btn-lg btn-warning mb-2") }}
+    </form>
+
+    <div style="display: inline">
+        <form method="post">
+            <input name="delete_task" type="hidden">
+            <input type="submit" class="btn btn btn-danger btn-lg" width="30px" value="Delete task"
+            style="float: left">
+        </form>
+        <a href="{{ url_for('maraphon', id=maraphone_id) }}"
+        class="btn btn-primary btn-lg mx-3" style="float: left" width="30px">Maraphone</a>
+    </div>
+</div>
+{% endblock %}

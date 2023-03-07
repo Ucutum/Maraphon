@@ -1,0 +1,36 @@
+{% extends "index.html" %}
+{% block content %}
+
+{% for message in get_flashed_messages() %}
+<div class="alert alert-warning" role="alert">
+    {{ message }}
+</div>
+{% endfor %}
+
+<h1>Maraphon settigns</h1>
+
+<div>
+    <form method="post">
+        {{ form.hidden_tag() }}
+
+        <div class="form-floating mb-1">
+            {{ form.title(class="form-control", id="floatingInput", value=form.title.content) }}
+            <label for="floatingInput">{{ form.title.label }}</label>
+            {% for error in form.title.errors %}
+            <p class="alert alert-danger" role="alert">
+                {{ error }}
+            </p>
+            {% endfor %}
+        </div>
+
+        <div style="display: inline">
+            <div style="float: left">
+                {{ form.submit(type="submit", class="w-100 btn btn-lg btn-warning mb-2", width="30px") }}
+            </div>
+            <a href="{{ url_for('maraphon', id=maraphone_id) }}"
+            class="btn btn-primary btn-lg mx-3" style="float: left" width="30px">Maraphone</a>
+        </div>
+    </form>
+</div>
+
+{% endblock %}

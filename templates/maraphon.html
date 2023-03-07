@@ -49,14 +49,32 @@
                         </div>
                         {% endif %}
                     </div>
+                    {% if is_creator %}
+                    <a href="{{ url_for('edit', id=day) }}" class="btn btn-outline-primary">Edit</a>
+                    {% endif %}
                 </div>
             {% endfor %}
         </div>
-
+        
         <div class="conrainer px-4 py-2">
             <button type="submit" class="btn btn-warning btn-lg" style="border-radius: 12px;">Submit</button>
         </div>
         </form>
+
+        <div style="display: inline">
+
+            <form method="POST" name="add_task" style="float: left">
+                <input name="add_task" type="hidden">
+                <div class="container px-4 py-2">
+                    <button type="submit" class="btn btn-outline-primary btn-lg" style="border-radius: 12px; float: left">Add task</button>
+                </div>
+            </form>
+
+            <div class="container px-4 py-2">
+                <a href="{{ url_for('maraphon_settings', id=id) }}" class="btn btn-outline-primary btn-lg" style="border-radius: 12px; float: left">Settings</a>
+            </div>
+        
+        </div>
     </div>
 
     <div style="flex: auto;">

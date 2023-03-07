@@ -12,12 +12,13 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import os
 import json
 from flask_login import LoginManager, login_user, login_required, current_user, logout_user
-from userlogin import UserLogin
 from sqlalchemy.orm import Session
 import datetime
 
 from form.login import LoginForm
 from form.singin import SinginForm
+from form.task import TaskForm
+from form.maraphon_settigns import MaraphonSettingsForm
 
 
 info("Create app")
@@ -43,7 +44,6 @@ from data.users import User
 
 
 db: Session = db_session.create_session()
-user: User = None
 header = {}
 
 
@@ -52,7 +52,8 @@ def make_header_data(url=None):
     header["menu"] = [
         ("Главная", url_for("home"), False),
         ("FAQ", url_for("faq"), False),
-        ("О Нас", url_for("about"), False)
+        ("О Нас", url_for("about"), False),
+        ("Создать", url_for("create"), False)
         ]
     if url == url_for("account"):
         header["account"] = True
@@ -71,20 +72,17 @@ def make_header_data(url=None):
 
 @app.before_request
 def before_request():
-    global user
-    if hasattr(current_user, "user"):
-        user = current_user.__getattr__("user")
-    else:
-        user = None
     make_header_data()
 
 
 login_manager = LoginManager(app)
+login_manager.init_app(app)
 
 
 @login_manager.user_loader
 def load_user(user_id):
-    return UserLogin().from_db_by_id(user_id, db)
+    # return UserLogin().from_db_by_id(user_id, db)
+    return db.query(User).filter(User.id == user_id).first()
 
 
 @app.route("/search", methods=["GET", "POST"])
@@ -98,6 +96,57 @@ def search():
 def home():
     make_header_data(url_for("home"))
     return render_template("home.html", header=header)
+
+
+@app.route("/create", methods=["GET", "POST"])
+@login_required
+def create():
+    if request.method == "POST":
+        m = Maraphone(
+            title="NewMaraphon",
+            creator_id=current_user.get_id()
+        )
+        db.add(m)
+        db.commit()
+        return redirect(url_for("maraphon", id=m.id))
+    make_header_data(url_for("create"))
+    maraphones = db.query(Maraphone).filter(Maraphone.creator_id == current_user.get_id()).all()
+    names = list(map(lambda x: (x.title, url_for("maraphon", id=x.id)), maraphones))
+    return render_template("create.html", header=header, maraphones=names)
+
+
+@app.route("/edit/<int:id>", methods=["GET", "POST"])
+@login_required
+def edit(id):
+    task = db.query(Task).filter(Task.id == id).first()
+    if not task:
+        return abort(404)
+
+    form = TaskForm()
+
+    if request.method == "POST":
+        if "delete_task" in request.form:
+            redirect_id = task.main_id
+            db.delete(task)
+            db.commit()
+            return redirect(url_for("maraphon", id=redirect_id))
+
+        if form.validate():
+            task.name = form.name.data
+            task.date = form.date.data
+            task.description = form.description.data
+
+            return redirect(url_for("maraphon", id=task.main_id))
+        else:
+            return abort(400)
+
+    form.name.data = task.name
+    form.date.data = task.date
+    form.description.data = task.description
+
+    return render_template(
+        "edit.html", header=header, form=form,
+        maraphone_id=task.main.id)
 
 
 @app.route("/faq")
@@ -116,7 +165,7 @@ def about():
 @login_required
 def account():
     make_header_data(url_for("account"))
-    data = [("name", user.name), ("id", user.id)]
+    data = [("name", current_user.name), ("id", current_user.id)]
     return render_template("account.html", header=header, data=data)
 
 
@@ -188,8 +237,8 @@ def login():
         password = form.password.data
         if logging_user.check_password(password):
             debug(f"login {name}")
-            usersess = UserLogin().create(logging_user)
-            login_user(usersess)
+            userlogin = db.query(User).filter(User.name == name).first()
+            login_user(userlogin)
             return redirect(url_for('home'))
         else:
             debug("password is wrong")
@@ -198,16 +247,34 @@ def login():
     return render_template("login.html", header=header, form=form)
 
 
-@app.route("/maraphon/<id>", methods=["GET", "POST"])
+@app.route("/maraphon/<int:id>", methods=["GET", "POST"])
 @login_required
 def maraphon(id):
     maraphon = db.query(Maraphone).filter(Maraphone.id == id).first()
-    print(maraphon)
 
     if not maraphon:
         return abort(404)
 
-    tasks = db.query(Task).filter(Task.main_id == id).all()
+    if "add_task" in request.form:
+        last_index = db.query(Task).filter(Task.main_id==id).order_by(Task.index).first()
+        if not last_index:
+            last_index = 0
+        else:
+            last_index = last_index.index
+
+        task = Task(
+            main_id=id,
+            index=last_index,
+            name="NewTask",
+            date=datetime.datetime.today().date(),
+            description="-"
+            )
+        db.add(task)
+        db.commit()
+
+        return redirect(url_for("edit", id=task.id))
+
+    tasks = db.query(Task).filter(Task.main_id == id).order_by(Task.date).all()
     days = []
     for task in tasks:
         current_state = db.query(State).filter(State.task_id == task.id, State.user_id == current_user.get_id()).first()
@@ -251,10 +318,35 @@ def maraphon(id):
         "id": id,
         "title": maraphon.title,
         "creator": maraphon.creator.name,
-        "days": days
+        "days": days,
+        "is_creator": maraphon.creator.id == current_user.get_id()
     }
 
     return render_template("maraphon.html", header=header, **parameters)
+
+
+@app.route("/maraphon_settigns/<int:id>", methods=["GET", "POST"])
+@login_required
+def maraphon_settings(id):
+    maraphon = db.query(Maraphone).filter(Maraphone.id == id).first()
+
+    if not maraphon:
+        return abort(404)
+
+    form = MaraphonSettingsForm()
+
+    if form.validate_on_submit():
+        maraphon.title = form.title.data
+        db.commit()
+        return redirect(url_for("maraphon", id=maraphon.id))
+    
+    # TODO check validate
+
+    form.title.content = maraphon.title
+
+    return render_template(
+        "maraphon_settings.html", header=header, form=form,
+        maraphone_id=maraphon.id)
 
 
 if __name__ == "__main__":
