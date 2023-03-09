@@ -54,6 +54,8 @@ for (let i = 0; i < elements_list.length; i++)
         document.getElementById("description").innerHTML = descr_el.innerHTML
         document.getElementById("description_h").innerHTML = el.innerHTML + "Description"
         document.getElementById("description_commit_button").hidden = false
+        document.getElementById("description_date").innerHTML = document.getElementById("date_" + el.id).innerHTML
+        document.getElementById("description_done_users").innerHTML = document.getElementById("done_users_" + el.id).innerHTML
 
         var submit_description_button = document.getElementById("description_commit_button")
         submit_description_button.hidden = !can_touch

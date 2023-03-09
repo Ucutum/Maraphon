@@ -3,17 +3,30 @@
 
 <main style="display: flex">
     <div class="wrap" style="flex: auto;">
-        <h1>Maraphone</h1>
+        <h1>{{ maraphone_name }}</h1>
         <h6>Id: {{ id }}</h6>
         <h6>Creator: {{ creator }}</h6>
 
         <form method="POST" name="days">
         <div>
-            {% for day, name, status, can_touch, description in days %}
+            {% for day, name, status, can_touch, description, date, done_users in days %}
                 <div class="col-md-6">
+                    {% if can_touch %}
                     <h3 class="mb-4 darkening" id="{{ day }}" style="display: inline-block; border-radius: 5px;">{{ name }} |</h3>
+                    <span class="badge bg-warning">Touch</span>
+                    {% else %}
+                    <h3 class="mb-4 darkening" id="{{ day }}" style="display: inline-block; border-radius: 5px;">{{ name }} |</h3>
+                    {% endif %}
                     <p id="description_id_{{ day }}" hidden>{{ description }}</p>
                     <p id="day_can_touch_{{ day }}" hidden>{{ can_touch }}</p>
+                    <p id="date_{{ day }}" hidden>{{ date }}</p>
+                    <div id="done_users_{{ day }}" hidden>
+                        <ul>
+                            {% for name in done_users %}
+                            <li>{{ name }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
                     <div style="display: inline-block;">
                         {% if can_touch %}
                         <div>
@@ -52,6 +65,9 @@
                     {% if is_creator %}
                     <a href="{{ url_for('edit', id=day) }}" class="btn btn-outline-primary">Edit</a>
                     {% endif %}
+                    {% if is_creator %}
+                    <a href="{{ url_for('view', id=day) }}" class="btn btn-outline-primary">View</a>
+                    {% endif %}
                 </div>
             {% endfor %}
         </div>
@@ -61,26 +77,48 @@
         </div>
         </form>
 
+        {% if is_creator %}
         <div style="display: inline">
-
             <form method="POST" name="add_task" style="float: left">
                 <input name="add_task" type="hidden">
                 <div class="container px-4 py-2">
                     <button type="submit" class="btn btn-outline-primary btn-lg" style="border-radius: 12px; float: left">Add task</button>
                 </div>
             </form>
-
             <div class="container px-4 py-2">
                 <a href="{{ url_for('maraphon_settings', id=id) }}" class="btn btn-outline-primary btn-lg" style="border-radius: 12px; float: left">Settings</a>
             </div>
-        
         </div>
+        {% endif %}
+
     </div>
 
     <div style="flex: auto;">
         <div style="border: 2px solid black; border-radius: 10px; padding: 10px">
             <h3 id="description_h">Description</h3>
             <p id="description"></p>
+            <h5>Date</h5>
+            <h5 id="description_date">-</h5>
+
+            {% if is_creator %}
+            <div class="accordion mt-3 mb-3">
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingOne">
+                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                        <div> View </div>
+                    </button>
+                    </h2>
+                    <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
+                    <div class="accordion-body">
+                        <div id="description_done_users"></div>
+                    </div>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div id="description_done_users" hidden></div>
+            {% endif %}
+
             <button class="btn btn-primary" id="description_commit_button"
             hidden onclick="">Commit</button>
         </div>

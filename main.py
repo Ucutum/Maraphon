@@ -19,6 +19,7 @@ from form.login import LoginForm
 from form.singin import SinginForm
 from form.task import TaskForm
 from form.maraphon_settigns import MaraphonSettingsForm
+from data import db_session
 
 
 info("Create app")
@@ -28,14 +29,7 @@ with open("config.json") as file:
     info("config.json" + str(d))
     app.config.from_mapping(d)
 
-app.config.update(dict(DATABASE=os.path.join(app.root_path, "db", "database.db")))
-
-
-from data import db_session
-
-
-db_session.global_init(app.config["DATABASE"])
-
+db_session.global_init(os.path.join(app.root_path, "db", "database.db"))
 
 from data.maraphones import Maraphone
 from data.states import State
@@ -53,8 +47,11 @@ def make_header_data(url=None):
         ("Главная", url_for("home"), False),
         ("FAQ", url_for("faq"), False),
         ("О Нас", url_for("about"), False),
-        ("Создать", url_for("create"), False)
         ]
+
+    if current_user.is_authenticated:
+        header["menu"].append(("Создать", url_for("create"), False))
+
     if url == url_for("account"):
         header["account"] = True
     else:
@@ -81,11 +78,11 @@ login_manager.init_app(app)
 
 @login_manager.user_loader
 def load_user(user_id):
-    # return UserLogin().from_db_by_id(user_id, db)
     return db.query(User).filter(User.id == user_id).first()
 
 
 @app.route("/search", methods=["GET", "POST"])
+@login_required
 def search():
     print("SEARCH|", request.form.get("search"))
     return redirect(url_for("maraphon", id=request.form.get("search", "0")))
@@ -119,7 +116,11 @@ def create():
 @login_required
 def edit(id):
     task = db.query(Task).filter(Task.id == id).first()
+
     if not task:
+        return abort(404)
+
+    if task.main.creator_id != current_user.id:
         return abort(404)
 
     form = TaskForm()
@@ -138,7 +139,10 @@ def edit(id):
 
             return redirect(url_for("maraphon", id=task.main_id))
         else:
-            return abort(400)
+            flash("Form is not validate.")
+            return render_template(
+                "edit.html", header=header, form=form,
+                maraphone_id=task.main.id)
 
     form.name.data = task.name
     form.date.data = task.date
@@ -147,6 +151,30 @@ def edit(id):
     return render_template(
         "edit.html", header=header, form=form,
         maraphone_id=task.main.id)
+
+
+def get_task_users(id):
+    task = db.query(Task).filter(Task.id == id).first()
+    if not task:
+        return []
+    return set(map(
+        lambda x: x.user.name, filter(lambda y: y.done, task.states)))
+
+
+@app.route("/view/<int:id>")
+@login_required
+def view(id):
+    task = db.query(Task).filter(Task.id == id).first()
+
+    if not task:
+        return abort(404)
+
+    if task.main.creator_id != current_user.id:
+        return abort(404)
+    # only creator can view
+
+    return render_template(
+        "view.html", header=header, users=get_task_users(id))
 
 
 @app.route("/faq")
@@ -170,6 +198,7 @@ def account():
 
 
 @app.route("/logout")
+@login_required
 def logout():
     print("logout")
     logout_user()
@@ -185,9 +214,6 @@ def singin():
         password = form.password.data
         password_again = form.password_again.data
 
-        if len(telegram) <= 1:
-            flash("Telegram must be specified.")
-            return render_template("singin.html", header=header, form=form)
         if telegram[0] != "@":
             flash("Telegram should be similar to '@telegram'.")
             return render_template("singin.html", header=header, form=form)
@@ -198,10 +224,6 @@ def singin():
 
         if not name.strip():
             flash("Name must be specified.")
-            return render_template("singin.html", header=header, form=form)
-
-        if len(name) <= 5:
-            flash("The name should be longer 5 characters. (>= 6)")
             return render_template("singin.html", header=header, form=form)
 
         if db.query(User).filter(User.name == name).all():
@@ -250,12 +272,17 @@ def login():
 @app.route("/maraphon/<int:id>", methods=["GET", "POST"])
 @login_required
 def maraphon(id):
+    id = int(id)
+
     maraphon = db.query(Maraphone).filter(Maraphone.id == id).first()
 
     if not maraphon:
         return abort(404)
 
     if "add_task" in request.form:
+        if maraphon.creator_id != current_user.id:
+            return abort(404)
+
         last_index = db.query(Task).filter(Task.main_id==id).order_by(Task.index).first()
         if not last_index:
             last_index = 0
@@ -274,6 +301,8 @@ def maraphon(id):
 
         return redirect(url_for("edit", id=task.id))
 
+    is_creator = str(maraphon.creator_id) == str(current_user.get_id())
+
     tasks = db.query(Task).filter(Task.main_id == id).order_by(Task.date).all()
     days = []
     for task in tasks:
@@ -282,23 +311,23 @@ def maraphon(id):
             current_state = State(task_id=task.id, user_id=current_user.get_id(), done=False)
             db.add(current_state)
             db.commit()
+        if is_creator:
+            done_users = get_task_users(task.id)
+        else:
+            done_users = []
         days.append((
             task.id,
             task.name,
             current_state.done,
             datetime.datetime.today().date() == task.date,
-            task.description))
-    print(days)
-
-    # day
-    # (id, name, done, can_change)
+            task.description,
+            task.date,
+            done_users))
 
     if request.method == "POST":
-        checked = request.form.getlist("check")
         for element_id in list(map(lambda x: x[0], days)):
             ok_days = list(filter(lambda d: d[0] == element_id and d[3], days))
-            # days with id == element_id
-            print(ok_days)
+
             if len(ok_days) == 0:
                 continue
             if len(ok_days) > 1:
@@ -310,7 +339,6 @@ def maraphon(id):
                 warning("not current state")
                 abort(400)
             current_state.done = str(element_id) in request.form.getlist("check")
-            print(current_state.done)
             db.commit()
         return redirect(url_for("maraphon", id=id))
 
@@ -319,7 +347,8 @@ def maraphon(id):
         "title": maraphon.title,
         "creator": maraphon.creator.name,
         "days": days,
-        "is_creator": maraphon.creator.id == current_user.get_id()
+        "is_creator": is_creator,
+        "maraphone_name": maraphon.title
     }
 
     return render_template("maraphon.html", header=header, **parameters)
@@ -333,14 +362,15 @@ def maraphon_settings(id):
     if not maraphon:
         return abort(404)
 
+    if maraphon.creator_id != current_user.id:
+        return abort(404)
+
     form = MaraphonSettingsForm()
 
     if form.validate_on_submit():
         maraphon.title = form.title.data
         db.commit()
         return redirect(url_for("maraphon", id=maraphon.id))
-    
-    # TODO check validate
 
     form.title.content = maraphon.title
 

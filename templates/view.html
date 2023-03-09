@@ -1,0 +1,11 @@
+{% extends "index.html" %}
+{% block content %}
+<h1>View</h1>
+
+<ul>
+{% for name in users %}
+<li>{{ name }}</li>
+{% endfor %}
+</ul>
+
+{% endblock %}
