@@ -67,19 +67,23 @@ def make_header_data(url=None):
                     header["menu"][i][0], header["menu"][i][1], False)
 
 
-@app.before_request
-def before_request():
-    global db
-    if not hasattr(g, "link_db"):
-        g.link_db = db_session.create_session()
-    db = g.link_db
-    make_header_data()
+db = db_session.create_session()
 
 
-@app.teardown_appcontext
-def close_db(error):
-    if hasattr(g, 'link_db'):
-        g.link_db.close()
+# @app.before_request
+# def before_request():
+#     global db
+#     if not hasattr(g, "link_db"):
+#         g.link_db = db_session.create_session()
+#     db = g.link_db
+#     make_header_data()
+
+
+# @app.teardown_appcontext
+# def close_db(error):
+#     # if hasattr(g, 'link_db'):
+#     #     g.link_db.close()
+#     pass
 
 
 login_manager = LoginManager(app)

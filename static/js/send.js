@@ -1,6 +1,7 @@
 function Check(id)
 {
     Check_(id)
+    updateStatusbar()
 }
 
 
@@ -12,8 +13,9 @@ async function Check_(id)
     xhr.onload = function() {
         console.log(`Загружено: ${xhr.status} ${xhr.response}`);
         state = JSON.parse(xhr.response).state
+        console.log(state)
         updateButton(state)
-        document.getElementById(id).check = state
+        document.getElementById("flexCheck_" + id).checked = state
     };
     
     xhr.onerror = function() { // происходит, только когда запрос совсем не получилось выполнить
@@ -33,8 +35,8 @@ async function Check_(id)
     return xhr.send(data)
 }
 
-var l = Array.from(document.getElementsByClassName("day"))
-console.log(l)
-l.forEach(function(e){
+var tasks = Array.from(document.getElementsByClassName("day"))
+console.log(tasks)
+tasks.forEach(function(e){
     Check(e.textContent)
 })
