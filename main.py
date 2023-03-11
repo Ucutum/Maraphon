@@ -7,7 +7,7 @@ from logging import warning
 logging.getLogger().setLevel(logging.DEBUG)
 info("Started main.py")
 
-from flask import Flask, render_template, request, abort, redirect, url_for, flash
+from flask import Flask, render_template, request, abort, redirect, url_for, flash, g
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
 import json
@@ -37,7 +37,7 @@ from data.tasks import Task
 from data.users import User
 
 
-db: Session = db_session.create_session()
+db: Session = None
 header = {}
 
 
@@ -69,7 +69,17 @@ def make_header_data(url=None):
 
 @app.before_request
 def before_request():
+    global db
+    if not hasattr(g, "link_db"):
+        g.link_db = db_session.create_session()
+    db = g.link_db
     make_header_data()
+
+
+@app.teardown_appcontext
+def close_db(error):
+    if hasattr(g, 'link_db'):
+        g.link_db.close()
 
 
 login_manager = LoginManager(app)
@@ -78,6 +88,7 @@ login_manager.init_app(app)
 
 @login_manager.user_loader
 def load_user(user_id):
+    db = db_session.create_session()
     return db.query(User).filter(User.id == user_id).first()
 
 
@@ -136,6 +147,7 @@ def edit(id):
             task.name = form.name.data
             task.date = form.date.data
             task.description = form.description.data
+            db.commit()
 
             return redirect(url_for("maraphon", id=task.main_id))
         else:
@@ -324,24 +336,6 @@ def maraphon(id):
             task.date,
             done_users))
 
-    if request.method == "POST":
-        for element_id in list(map(lambda x: x[0], days)):
-            ok_days = list(filter(lambda d: d[0] == element_id and d[3], days))
-
-            if len(ok_days) == 0:
-                continue
-            if len(ok_days) > 1:
-                warning("len(days) > 1")
-            ok_day = ok_days[0]
-            current_state = db.query(State).filter(State.task_id == ok_day[0], State.user_id == current_user.get_id()).first()
-            # current State
-            if not current_state:
-                warning("not current state")
-                abort(400)
-            current_state.done = str(element_id) in request.form.getlist("check")
-            db.commit()
-        return redirect(url_for("maraphon", id=id))
-
     parameters = {
         "id": id,
         "title": maraphon.title,
@@ -352,6 +346,33 @@ def maraphon(id):
     }
 
     return render_template("maraphon.html", header=header, **parameters)
+
+
+@app.route("/state/<int:id>", methods=["POST"])
+@login_required
+def state(id):
+    try:
+        bstate = json.loads(str(request.data)[2:-1])["state"]
+    except Exception:
+        return json.dumps(
+            {"responsible": False, "error": "jsonfy state error"})
+
+    state = db.query(State).filter(
+        State.user_id == current_user.id,
+        State.task_id == id).first()
+
+    if not state:
+        return json.dumps({"responsible": False, "error": "has not state"})
+
+    print(state.task.date, datetime.datetime.today().date())
+    if state.task.date != datetime.datetime.today().date():
+        return json.dumps(
+            {"responsible": False, "state": state.done, "error": "date error"})
+
+    state.done = bstate
+    db.commit()
+
+    return json.dumps({"responsible": True, "state": state.done})
 
 
 @app.route("/maraphon_settigns/<int:id>", methods=["GET", "POST"])

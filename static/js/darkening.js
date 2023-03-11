@@ -1,12 +1,11 @@
 var target_el_id = 0
-var button_state = false
 
 
-function updateButton()
+function updateButton(state)
 {
     var submit_description_button = document.getElementById("description_commit_button")
 
-    if (!button_state)
+    if (!state)
     {
         submit_description_button.innerHTML = "Commit"
         submit_description_button.classList.add("btn-primary")
@@ -21,10 +20,8 @@ function updateButton()
 
 function changeElement()
 {
-    var element_id = target_el_id
-    button_state = !button_state
-    document.getElementById("flexCheck_" + element_id).checked = button_state
-    updateButton()
+    document.getElementById("flexCheck_" + target_el_id).checked = ! document.getElementById("flexCheck_" + target_el_id).checked
+    Check(target_el_id)
 }
 
 
@@ -45,11 +42,11 @@ for (let i = 0; i < elements_list.length; i++)
         var el = elements_list[i]
         target_el_id = el.id
 
+        console.log("target el id: " + target_el_id)
+
         var descr_el = document.getElementById("description_id_" + el.id)
 
         let can_touch = (document.getElementById("day_can_touch_" + el.id).innerHTML == "True")
-
-        button_state = document.getElementById("flexCheck_" + el.id).checked
 
         document.getElementById("description").innerHTML = descr_el.innerHTML
         document.getElementById("description_h").innerHTML = el.innerHTML + "Description"
@@ -59,7 +56,7 @@ for (let i = 0; i < elements_list.length; i++)
 
         var submit_description_button = document.getElementById("description_commit_button")
         submit_description_button.hidden = !can_touch
-        updateButton()
+        updateButton(document.getElementById("flexCheck_" + el.id).checked)
         if (can_touch)
         {
             submit_description_button.onclick = changeElement
