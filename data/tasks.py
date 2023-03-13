@@ -13,7 +13,6 @@ class Task(SqlAlchemyBase):
                                 sqlalchemy.ForeignKey("maraphones.id"))
     main = orm.relationship("Maraphone", back_populates="tasks")
 
-    index = sqlalchemy.Column(sqlalchemy.Integer)
     name = sqlalchemy.Column(sqlalchemy.String)
     date = sqlalchemy.Column(sqlalchemy.Date)
 

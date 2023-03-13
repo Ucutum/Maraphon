@@ -44,13 +44,13 @@ header = {}
 def make_header_data(url=None):
     header["registered"] = current_user.is_authenticated
     header["menu"] = [
-        ("Главная", url_for("home"), False),
+        ("Home", url_for("home"), False),
         ("FAQ", url_for("faq"), False),
-        ("О Нас", url_for("about"), False),
+        ("About", url_for("about"), False),
         ]
 
     if current_user.is_authenticated:
-        header["menu"].append(("Создать", url_for("create"), False))
+        header["menu"].append(("My maraphons", url_for("create"), False))
 
     if url == url_for("account"):
         header["account"] = True
