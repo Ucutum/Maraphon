@@ -49,6 +49,7 @@ for (let i = 0; i < elements_list.length; i++)
         let can_touch = (document.getElementById("day_can_touch_" + el.id).innerHTML == "True")
 
         document.getElementById("description").innerHTML = descr_el.innerHTML
+        document.getElementById("description_image").src = document.getElementById("image_" + el.id).src
         document.getElementById("description_h").innerHTML = el.innerHTML + "Description"
         document.getElementById("description_commit_button").hidden = false
         document.getElementById("description_date").innerHTML = document.getElementById("date_" + el.id).innerHTML

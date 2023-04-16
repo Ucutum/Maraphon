@@ -9,7 +9,7 @@
 
         <form method="POST" name="days">
         <div>
-            {% for day, name, status, can_touch, description, date, done_users in days %}
+            {% for day, name, status, can_touch, description, date, done_users, image_path in days %}
                 <div class="col-md-6">
                     {% if can_touch %}
                     <h3 class="mb-4 darkening" id="{{ day }}" style="display: inline-block; border-radius: 5px;">{{ name }} |</h3>
@@ -19,6 +19,7 @@
                     {% endif %}
                     <div hidden class="day">{{ day }}</div>
                     <p id="description_id_{{ day }}" hidden>{{ description }}</p>
+                    <image src="{{ image_path }}" id="image_{{ day }}" hidden></image>
                     <p id="day_can_touch_{{ day }}" hidden>{{ can_touch }}</p>
                     <p id="date_{{ day }}" hidden>{{ date }}</p>
                     <div id="done_users_{{ day }}" hidden>
@@ -100,6 +101,7 @@
     <div style="flex: auto;">
         <div style="border: 2px solid black; border-radius: 10px; padding: 10px">
             <h3 id="description_h">Description</h3>
+            <image id="description_image" width="300px" height="300px"></image>
             <p id="description"></p>
             <h5>Date</h5>
             <h5 id="description_date">-</h5>

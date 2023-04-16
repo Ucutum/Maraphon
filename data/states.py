@@ -3,9 +3,10 @@ import sqlalchemy
 from .db_session import SqlAlchemyBase
 from sqlalchemy import orm
 from logging import debug
+from sqlalchemy_serializer import SerializerMixin
 
 
-class State(SqlAlchemyBase):
+class State(SqlAlchemyBase, SerializerMixin):
     __tablename__ = "states"
 
     id = sqlalchemy.Column(

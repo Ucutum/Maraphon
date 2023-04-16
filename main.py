@@ -1,26 +1,25 @@
 import logging
 from logging import debug
 from logging import info
-from logging import warning
 
 # logging.basicConfig(level=logging.INFO, filename="applog.log", filemode="w")
 logging.getLogger().setLevel(logging.DEBUG)
 info("Started main.py")
 
-from flask import Flask, render_template, request, abort, redirect, url_for, flash, g
+from flask import Flask, render_template, request, abort, redirect, url_for, flash, g, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
 import json
 from flask_login import LoginManager, login_user, login_required, current_user, logout_user
 from sqlalchemy.orm import Session
 import datetime
+import uuid
 
 from form.login import LoginForm
 from form.singin import SinginForm
 from form.task import TaskForm
 from form.maraphon_settigns import MaraphonSettingsForm
 from data import db_session
-
 
 info("Create app")
 app = Flask(__name__)
@@ -36,8 +35,105 @@ from data.states import State
 from data.tasks import Task
 from data.users import User
 
+from flask_restful import Api, Resource, reqparse
 
-db: Session = None
+api = Api(app)
+
+api_key_parser = reqparse.RequestParser()
+api_key_parser.add_argument("api_key", required=True, type=str)
+
+
+class MaraphoneApi(Resource):
+    def get(self, id):
+        args = api_key_parser.parse_args()
+        if not check_api_key(args.api_key):
+            return abort(404, message="api key not found")
+
+        db = db_session.create_session()
+        m = db.query(Maraphone).filter(Maraphone.id == id).first()
+        if m is None:
+            return abort(404, message="maraphone not found")
+        return jsonify({"maraphone": m.to_dict()})
+    
+
+class TasksListApi(Resource):
+    def get(self, maraphone_id):
+        args = api_key_parser.parse_args()
+        if not check_api_key(args.api_key):
+            return abort(404, message="api key not found")
+
+        db = db_session.create_session()
+
+        m = db.query(Maraphone).filter(Maraphone.id == maraphone_id).first()
+        if m is None:
+            return abort(404, message="maraphone not found")
+
+        t = db.query(Task).filter(Task.main_id == maraphone_id).all()
+        return jsonify({"tasks": [i.to_dict() for i in t]})
+
+
+parser = reqparse.RequestParser()
+parser.add_argument("maraphone_id", required=True, type=int)
+parser.add_argument("name", required=True, type=str)
+parser.add_argument("date", required=True, type=str)
+parser.add_argument("description", required=True, type=str)
+parser.add_argument("api_key", required=True, type=str)
+
+
+def check_api_key(api_key):
+    db = db_session.create_session()
+    return bool(db.query(User).filter(User.api_key == api_key).first())
+
+
+class TasksApi(Resource):
+    def get(self, task_id):
+        db = db_session.create_session()
+        args = api_key_parser.parse_args()
+        if not check_api_key(args.api_key):
+            return abort(404, message="api key not found")
+
+        t = db.query(Task).filter(Task.id == task_id).first()
+        if t is None:
+            return abort(404, message="task not found")
+        
+        return jsonify(t.to_dict())
+    
+    def post(self, task_id):
+        args = parser.parse_args()
+        db = db_session.create_session()
+        if not check_api_key(args.api_key):
+            return abort(404, message="api key not found")
+
+        m = db.query(Maraphone).filter(Maraphone.id == args.maraphone_id).first()
+        if m is None:
+            return abort(404, message="maraphone not found")
+        
+        u = db.query(User).filter(User.api_key == args.api_key)
+        if m.creator_id != u.id:
+            return abort(403)
+        
+        time_str = args.date
+        time_format = "%Y.%m.%d"
+
+        try:
+            time_obj = datetime.datetime.strptime(time_str, time_format)
+        except ValueError:
+            return abort(400, "Error")
+
+        t = Task(
+            main_id=args.maraphone_id,
+            name=args.name,
+            date=time_obj,
+            description=args.description)
+        
+        db.add(t)
+        db.commit()
+
+api.add_resource(MaraphoneApi, "/api/maraphone/<int:id>")
+api.add_resource(TasksListApi, "/api/task_list/<int:maraphone_id>")
+api.add_resource(TasksApi, "/api/task/<int:task_id>")
+
+
 header = {}
 
 
@@ -65,10 +161,6 @@ def make_header_data(url=None):
             else:
                 header["menu"][i] = (
                     header["menu"][i][0], header["menu"][i][1], False)
-
-
-db = db_session.create_session()
-
 
 # @app.before_request
 # def before_request():
@@ -113,6 +205,8 @@ def home():
 @app.route("/create", methods=["GET", "POST"])
 @login_required
 def create():
+    db = db_session.create_session()
+
     if request.method == "POST":
         m = Maraphone(
             title="NewMaraphon",
@@ -127,9 +221,18 @@ def create():
     return render_template("create.html", header=header, maraphones=names)
 
 
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
 @app.route("/edit/<int:id>", methods=["GET", "POST"])
 @login_required
 def edit(id):
+    db = db_session.create_session()
+
     task = db.query(Task).filter(Task.id == id).first()
 
     if not task:
@@ -151,6 +254,26 @@ def edit(id):
             task.name = form.name.data
             task.date = form.date.data
             task.description = form.description.data
+
+            if 'image' not in request.files:
+                print("no image")
+            else:
+                image = request.files["image"]
+                if not image.filename.strip():
+                    print("no image")
+                elif allowed_file(image.filename):
+                    print(image)
+                    name = str(uuid.uuid4()) + image.filename[image.filename.rfind("."):]
+                    print(name)
+                    image.save(os.path.join(app.config["UPLOAD_FOLDER"], name))
+                    print("ok")
+                    task.image = name
+                else:
+                    flash("Image is not validate.")
+                    return render_template(
+                        "edit.html", header=header, form=form,
+                        maraphone_id=task.main.id,
+                        image_path="/" + app.config["UPLOAD_FOLDER"] + "/" + task.image)
             db.commit()
 
             return redirect(url_for("maraphon", id=task.main_id))
@@ -158,18 +281,27 @@ def edit(id):
             flash("Form is not validate.")
             return render_template(
                 "edit.html", header=header, form=form,
-                maraphone_id=task.main.id)
+                maraphone_id=task.main.id,
+                image_path="/" + app.config["UPLOAD_FOLDER"] + "/" + task.image)
 
     form.name.data = task.name
     form.date.data = task.date
     form.description.data = task.description
 
+    if task.image is None:
+        image_path = "None"
+    else:
+        image_path = task.image
+
     return render_template(
         "edit.html", header=header, form=form,
-        maraphone_id=task.main.id)
+        maraphone_id=task.main.id,
+        image_path="/" + app.config["UPLOAD_FOLDER"] + "/" + task.image)
 
 
 def get_task_users(id):
+    db = db_session.create_session()
+
     task = db.query(Task).filter(Task.id == id).first()
     if not task:
         return []
@@ -180,6 +312,8 @@ def get_task_users(id):
 @app.route("/view/<int:id>")
 @login_required
 def view(id):
+    db = db_session.create_session()
+
     task = db.query(Task).filter(Task.id == id).first()
 
     if not task:
@@ -209,7 +343,12 @@ def about():
 @login_required
 def account():
     make_header_data(url_for("account"))
-    data = [("name", current_user.name), ("id", current_user.id)]
+    data = [
+        ("name", current_user.name), ("id", current_user.id),
+        (
+        "api_key",
+         current_user.api_key if current_user.api_key is not None else "You haven't api key.")
+        ]
     return render_template("account.html", header=header, data=data)
 
 
@@ -221,8 +360,21 @@ def logout():
     return redirect(url_for("home"))
 
 
+@app.route("/remake_api")
+@login_required
+def remake_api():
+    print("remake_api")
+    db = db_session.create_session()
+    u = db.query(User).filter(User.id == current_user.id).first()
+    u.api_key = str(uuid.uuid4())
+    db.commit()
+    return redirect(url_for("account"))
+
+
 @app.route("/singin", methods=["GET", "POST"])
 def singin():
+    db = db_session.create_session()
+
     form = SinginForm()
     if form.validate_on_submit():
         telegram = form.telegram.data
@@ -264,6 +416,8 @@ def singin():
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
+    db = db_session.create_session()
+
     form = LoginForm()
     if form.validate_on_submit():
         name = form.name.data
@@ -288,6 +442,8 @@ def login():
 @app.route("/maraphon/<int:id>", methods=["GET", "POST"])
 @login_required
 def maraphon(id):
+    db = db_session.create_session()
+
     id = int(id)
 
     maraphon = db.query(Maraphone).filter(Maraphone.id == id).first()
@@ -299,15 +455,8 @@ def maraphon(id):
         if maraphon.creator_id != current_user.id:
             return abort(404)
 
-        last_index = db.query(Task).filter(Task.main_id==id).order_by(Task.index).first()
-        if not last_index:
-            last_index = 0
-        else:
-            last_index = last_index.index
-
         task = Task(
             main_id=id,
-            index=last_index,
             name="NewTask",
             date=datetime.datetime.today().date(),
             description="-"
@@ -338,7 +487,8 @@ def maraphon(id):
             datetime.datetime.today().date() == task.date,
             task.description,
             task.date,
-            done_users))
+            done_users,
+            "/" + app.config["UPLOAD_FOLDER"] + "/" + task.image))
 
     parameters = {
         "id": id,
@@ -355,6 +505,8 @@ def maraphon(id):
 @app.route("/state/<int:id>", methods=["POST"])
 @login_required
 def state(id):
+    db = db_session.create_session()
+
     try:
         bstate = json.loads(str(request.data)[2:-1])["state"]
     except Exception:
@@ -382,6 +534,8 @@ def state(id):
 @app.route("/maraphon_settigns/<int:id>", methods=["GET", "POST"])
 @login_required
 def maraphon_settings(id):
+    db = db_session.create_session()
+
     maraphon = db.query(Maraphone).filter(Maraphone.id == id).first()
 
     if not maraphon:

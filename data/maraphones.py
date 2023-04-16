@@ -2,10 +2,13 @@ import datetime
 import sqlalchemy
 from .db_session import SqlAlchemyBase
 from sqlalchemy import orm
+from sqlalchemy_serializer import SerializerMixin
 
 
-class Maraphone(SqlAlchemyBase):
+class Maraphone(SqlAlchemyBase, SerializerMixin):
     __tablename__ = "maraphones"
+
+    serialize_only = ('id', 'title', 'created_date', 'creator_id')
 
     id = sqlalchemy.Column(sqlalchemy.Integer,
                            primary_key=True, autoincrement=True)

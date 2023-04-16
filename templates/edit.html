@@ -9,7 +9,7 @@
 
 <h1>Edit</h1>
 <div>
-    <form method="post">
+    <form method="post" enctype="multipart/form-data">
     {{ form.hidden_tag() }}
     <div class="form-floating mb-1">
         {{ form.name(class="form-control", id="floatingInput") }}
@@ -39,6 +39,12 @@
             {{ error }}
         </p>
         {% endfor %}
+    </div>
+
+    <image src="{{ image_path }}" width="50%" height="50%"></image>
+
+    <div class="mb-1">
+        <input type="file" name="image">
     </div>
 
     {{ form.submit(type="submit", class="w-100 btn btn-lg btn-warning mb-2") }}

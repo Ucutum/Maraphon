@@ -1,4 +1,7 @@
 {
     "DEBUG": true,
-    "SECRET_KEY": "kjldasfKFJDSLKlskdfjsld"
+    "SECRET_KEY": "kjldasfKFJDSLKlskdfjsld",
+    "MAX_CONTENT_LENGTH_mb": 16,
+    "MAX_CONTENT_LENGTH": 16777216,
+    "UPLOAD_FOLDER": "static/images"
 }
