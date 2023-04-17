@@ -1,8 +1,6 @@
-import datetime
 import sqlalchemy
 from .db_session import SqlAlchemyBase
 from sqlalchemy import orm
-from logging import debug
 from sqlalchemy_serializer import SerializerMixin
 
 

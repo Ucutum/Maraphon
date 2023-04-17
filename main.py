@@ -1,11 +1,3 @@
-import logging
-from logging import debug
-from logging import info
-
-# logging.basicConfig(level=logging.INFO, filename="applog.log", filemode="w")
-logging.getLogger().setLevel(logging.DEBUG)
-info("Started main.py")
-
 from flask import Flask, render_template, request, abort, redirect, url_for, flash, g, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
@@ -21,11 +13,9 @@ from form.task import TaskForm
 from form.maraphon_settigns import MaraphonSettingsForm
 from data import db_session
 
-info("Create app")
 app = Flask(__name__)
 with open("config.json") as file:
     d = json.loads(file.read())
-    info("config.json" + str(d))
     app.config.from_mapping(d)
 
 db_session.global_init(os.path.join(app.root_path, "db", "database.db"))
@@ -402,7 +392,6 @@ def singin():
             flash("The password was repeated incorrectly.")
             return render_template("singin.html", header=header, form=form)
 
-        debug(f"singin {telegram} {name}")
         new_user = User(
             name=name,
             telegram=telegram
@@ -423,17 +412,14 @@ def login():
         name = form.name.data
         logging_user = db.query(User).filter(User.name == name).first()
         if logging_user is None:
-            debug("name is unreal")
             flash("There is no such name or password.")
             return render_template("login.html", header=header, form=form)
         password = form.password.data
         if logging_user.check_password(password):
-            debug(f"login {name}")
             userlogin = db.query(User).filter(User.name == name).first()
             login_user(userlogin)
             return redirect(url_for('home'))
         else:
-            debug("password is wrong")
             flash("There is no such name or password.")
             return render_template("login.html", header=header, form=form)
     return render_template("login.html", header=header, form=form)
