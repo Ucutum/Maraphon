@@ -25,9 +25,11 @@
                   {% endfor %}
                 </ul>
         
+                {% if header["registered"] %}
                 <form class="col-12 col-lg-auto mb-3 mb-lg-0 me-lg-3" action="{{ url_for('search') }}" method="post">
                   <input type="search" name="search" class="form-control form-control-dark" placeholder="Search..." aria-label="Search">
                 </form>
+                {% endif %}
                 
                 {% if not header["registered"] %}
                 <div class="text-end">
