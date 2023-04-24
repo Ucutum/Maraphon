@@ -41,7 +41,9 @@
         {% endfor %}
     </div>
 
-    <image src="{{ image_path }}" width="50%" height="50%"></image>
+    {% if image_path != "-" %}
+        <image src="{{ image_path }}" width="50%" height="50%"></image>
+    {% endif %}
 
     <div class="mb-1">
         <input type="file" name="image">
