@@ -1,7 +1,6 @@
 {% extends "index.html" %}
 {% block content %}
-<h1>Home</h1>
-Только из печки:
+<h1>Search results by {{ question }}</h1>
 <ul class="list-group">
     {% for m in maraphones %}
     <li class="list-group-item">{{ m[0] }}   <a href="/maraphon/{{ m[1] }}">go_to</a></li>
