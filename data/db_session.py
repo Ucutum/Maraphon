@@ -19,7 +19,7 @@ def global_init(db_file):
     conn_str = f"sqlite:///{db_file}?check_same_thread=False"
     info(f"Connect database width adress {conn_str}")
 
-    engine = sa.create_engine(conn_str, echo=False, pool_size=20, max_overflow=10)
+    engine = sa.create_engine(conn_str, echo=False, pool_size=2000, max_overflow=1000)
     __factory = orm.sessionmaker(bind=engine)
 
     from . import __all_models
